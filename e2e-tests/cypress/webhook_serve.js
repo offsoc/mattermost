@@ -61,12 +61,17 @@ function ping(req, res) {
 }
 
 // Set base URLs and credential to be accessible by any endpoint
+const allowedBaseUrls = ['https://trusted.example.com', 'https://api.example.com'];
 let baseUrl;
 let webhookBaseUrl;
 let adminUsername;
 let adminPassword;
 function doSetup(req, res) {
-    baseUrl = req.body.baseUrl;
+    const providedBaseUrl = req.body.baseUrl;
+    if (!allowedBaseUrls.includes(providedBaseUrl)) {
+        return res.status(400).send('Invalid base URL.');
+    }
+    baseUrl = providedBaseUrl;
     webhookBaseUrl = req.body.webhookBaseUrl;
     adminUsername = req.body.adminUsername;
     adminPassword = req.body.adminPassword;
