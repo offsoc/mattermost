@@ -28,7 +28,7 @@
     "@types/react-redux": "^7.1.21",
     "@types/shallow-equals": "^1.0.0",
     "@types/styled-components": "^5.1.19",
-    "rollup": "^2.75.7",
+    "rollup": "^4.22.4",
     "rollup-plugin-scss": "4.0.0",
     "rollup-plugin-ts": "^2.0.5",
     "typescript": "^5.0.0"
