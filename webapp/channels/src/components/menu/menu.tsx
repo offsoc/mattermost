@@ -72,6 +72,7 @@ type MenuProps = {
     onToggle?: (isOpen: boolean) => void;
     onKeyDown?: (event: KeyboardEvent<HTMLDivElement>, forceCloseMenu?: () => void) => void;
     width?: string;
+    isMenuOpen?: boolean;
 }
 
 const defaultAnchorOrigin = { vertical: 'bottom', horizontal: 'left' } as PopoverOrigin;
@@ -170,6 +171,8 @@ export function Menu(props: Props) {
                         onModalClose: handleMenuModalClose,
                         children: props.children,
                         onKeyDown: props.menu.onKeyDown,
+                        menuHeader: props.menuHeader,
+                        menuFooter: props.menuFooter,
                     },
                 }),
             );
@@ -219,6 +222,12 @@ export function Menu(props: Props) {
             props.menu.onToggle(isMenuOpen);
         }
     }, [isMenuOpen]);
+
+    useEffect(() => {
+        if (props.menu.isMenuOpen === false) {
+            setAnchorElement(null);
+        }
+    }, [props.menu.isMenuOpen]);
 
     const providerValue = useMenuContextValue(closeMenu, Boolean(anchorElement));
 
@@ -283,6 +292,8 @@ interface MenuModalProps {
     onModalClose: (modalId: MenuProps['id']) => void;
     children: Props['children'];
     onKeyDown?: MenuProps['onKeyDown'];
+    menuHeader?: Props['menuHeader'];
+    menuFooter?: Props['menuFooter'];
 }
 
 function MenuModal(props: MenuModalProps) {
@@ -327,7 +338,9 @@ function MenuModal(props: MenuModalProps) {
                     aria-labelledby={props.menuButtonId}
                     onClick={handleModalClickCapture}
                 >
+                    {props.menuHeader}
                     {props.children}
+                    {props.menuFooter}
                 </MuiMenuList>
             </GenericModal>
         </CompassDesignProvider>
