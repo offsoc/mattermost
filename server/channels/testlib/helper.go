@@ -31,6 +31,7 @@ type MainHelper struct {
 	SQLStore         *sqlstore.SqlStore
 	ClusterInterface *FakeClusterInterface
 	Logger           *mlog.Logger
+	Options          HelperOptions
 
 	status           int
 	testResourcePath string
@@ -41,6 +42,7 @@ type HelperOptions struct {
 	EnableStore     bool
 	EnableResources bool
 	WithReadReplica bool
+	RunParallel     bool
 }
 
 func NewMainHelper() *MainHelper {
@@ -85,6 +87,8 @@ func NewMainHelperWithOptions(options *HelperOptions) *MainHelper {
 	}
 
 	if options != nil {
+		mainHelper.Options = *options
+
 		if options.EnableStore && !testing.Short() {
 			mainHelper.setupStore(options.WithReadReplica)
 		}
@@ -125,6 +129,41 @@ func (h *MainHelper) Main(m *testing.M) {
 	}
 
 	h.status = m.Run()
+}
+
+func (h *MainHelper) GetNewStore(tb testing.TB, withReadReplica bool) (store.Store, *model.SqlSettings, *searchengine.Broker) {
+	driverName := os.Getenv("MM_SQLSETTINGS_DRIVERNAME")
+	if driverName == "" {
+		driverName = model.DatabaseDriverPostgres
+	}
+
+	settings := storetest.MakeSqlSettings(driverName, withReadReplica)
+
+	config := &model.Config{}
+	config.SetDefaults()
+
+	searchEngine := searchengine.NewBroker(config)
+
+	var err error
+	sqlStore, err := sqlstore.New(*settings, h.Logger, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	tb.Cleanup(func() {
+		sqlStore.Close()
+		storetest.CleanupSqlSettings(settings)
+	})
+
+	store := searchlayer.NewSearchLayer(&TestStore{
+		sqlStore,
+	}, searchEngine, config)
+
+	store.MarkSystemRanUnitTests()
+
+	preloadMigrations(driverName, sqlStore)
+
+	return store, settings, searchEngine
 }
 
 func (h *MainHelper) setupStore(withReadReplica bool) {
@@ -204,11 +243,11 @@ func (h *MainHelper) setupResources() {
 // pg_dump -a -h localhost -U mmuser -d <> --no-comments --inserts -t roles -t systems
 // mysqldump -u root -p <> --no-create-info --extended-insert=FALSE Systems Roles
 // And keep only the permission related rows in the systems table output.
-func (h *MainHelper) PreloadMigrations() {
+func preloadMigrations(driverName string, sqlStore *sqlstore.SqlStore) {
 	var buf []byte
 	var err error
 
-	switch *h.Settings.DriverName {
+	switch driverName {
 	case model.DatabaseDriverPostgres:
 		finalPath := filepath.Join(server.GetPackagePath(), "channels", "testlib", "testdata", "postgres_migration_warmup.sql")
 		buf, err = os.ReadFile(finalPath)
@@ -222,11 +261,15 @@ func (h *MainHelper) PreloadMigrations() {
 			panic(fmt.Errorf("cannot read file: %v", err))
 		}
 	}
-	handle := h.SQLStore.GetMaster()
+	handle := sqlStore.GetMaster()
 	_, err = handle.Exec(string(buf))
 	if err != nil {
 		panic(errors.Wrap(err, "Error preloading migrations. Check if you have &multiStatements=true in your DSN if you are using MySQL. Or perhaps the schema changed? If yes, then update the warmup files accordingly"))
 	}
+}
+
+func (h *MainHelper) PreloadMigrations() {
+	preloadMigrations(*h.Settings.DriverName, h.SQLStore)
 }
 
 func (h *MainHelper) Close() error {
