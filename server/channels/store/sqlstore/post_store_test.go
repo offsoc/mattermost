@@ -21,6 +21,10 @@ func TestSearchPostStore(t *testing.T) {
 }
 
 func TestMysqlStopWords(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	mysqlStopWordsTests := []struct {
 		Name     string
 		Args     []string

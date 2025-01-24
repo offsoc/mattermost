@@ -27,6 +27,7 @@ import (
 	"github.com/mattermost/mattermost/server/public/plugin/plugintest/mock"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
 	"github.com/mattermost/mattermost/server/public/shared/request"
+	"github.com/mattermost/mattermost/server/v8"
 	"github.com/mattermost/mattermost/server/v8/channels/db"
 	"github.com/mattermost/mattermost/server/v8/channels/store"
 	"github.com/mattermost/mattermost/server/v8/channels/store/searchtest"
@@ -51,13 +52,25 @@ func newStoreType(name, driver string) *storeType {
 }
 
 func StoreTest(t *testing.T, f func(*testing.T, request.CTX, store.Store)) {
+	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
+
 	defer func() {
 		if err := recover(); err != nil {
-			tearDownStores()
+			tearDownGlobalStores()
+			if enableFullyParallelTests {
+				tearDownStores(stores)
+			}
 			panic(err)
 		}
 	}()
-	for _, st := range storeTypes {
+	for _, st := range stores {
 		st := st
 		rctx := request.TestContext(t)
 
@@ -65,37 +78,72 @@ func StoreTest(t *testing.T, f func(*testing.T, request.CTX, store.Store)) {
 			if testing.Short() {
 				t.SkipNow()
 			}
+
+			if enableFullyParallelTests {
+				t.Parallel()
+			}
+
 			f(t, rctx, st.Store)
 		})
 	}
 }
 
 func StoreTestWithSearchTestEngine(t *testing.T, f func(*testing.T, store.Store, *searchtest.SearchTestEngine)) {
+	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
+
 	defer func() {
 		if err := recover(); err != nil {
-			tearDownStores()
+			tearDownGlobalStores()
+			if enableFullyParallelTests {
+				tearDownStores(stores)
+			}
 			panic(err)
 		}
 	}()
 
-	for _, st := range storeTypes {
+	for _, st := range stores {
 		st := st
 		searchTestEngine := &searchtest.SearchTestEngine{
 			Driver: *st.SqlSettings.DriverName,
 		}
 
-		t.Run(st.Name, func(t *testing.T) { f(t, st.Store, searchTestEngine) })
+		t.Run(st.Name, func(t *testing.T) {
+			if enableFullyParallelTests {
+				t.Parallel()
+			}
+
+			f(t, st.Store, searchTestEngine)
+		})
 	}
 }
 
 func StoreTestWithSqlStore(t *testing.T, f func(*testing.T, request.CTX, store.Store, storetest.SqlStore)) {
+	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
+
 	defer func() {
 		if err := recover(); err != nil {
-			tearDownStores()
+			tearDownGlobalStores()
+			if enableFullyParallelTests {
+				tearDownStores(stores)
+			}
 			panic(err)
 		}
 	}()
-	for _, st := range storeTypes {
+	for _, st := range stores {
 		st := st
 		rctx := request.TestContext(t)
 
@@ -103,26 +151,59 @@ func StoreTestWithSqlStore(t *testing.T, f func(*testing.T, request.CTX, store.S
 			if testing.Short() {
 				t.SkipNow()
 			}
+
+			if enableFullyParallelTests {
+				t.Parallel()
+			}
+
 			f(t, rctx, st.Store, &StoreTestWrapper{st.SqlStore})
 		})
 	}
 }
 
-func initStores(logger mlog.LoggerIFace) {
-	if testing.Short() {
-		return
+func preloadSchema(driverName string, sqlStore *SqlStore) {
+	var buf []byte
+	var err error
+
+	switch driverName {
+	case model.DatabaseDriverPostgres:
+		finalPath := filepath.Join(server.GetPackagePath(), "channels", "testlib", "testdata", "psql_schema.sql")
+		buf, err = os.ReadFile(finalPath)
+		if err != nil {
+			panic(fmt.Errorf("cannot read file: %v", err))
+		}
+	case model.DatabaseDriverMysql:
+		finalPath := filepath.Join(server.GetPackagePath(), "channels", "testlib", "testdata", "mysql_schema.sql")
+		buf, err = os.ReadFile(finalPath)
+		if err != nil {
+			panic(fmt.Errorf("cannot read file: %v", err))
+		}
 	}
+	handle := sqlStore.GetMaster()
+	_, err = handle.Exec(string(buf))
+	if err != nil {
+		panic(errors.Wrap(err, "Error preloading schema. Check if you have &multiStatements=true in your DSN if you are using MySQL. Or perhaps the schema changed? If yes, then update the warmup files accordingly"))
+	}
+}
+
+func initStores(logger mlog.LoggerIFace) []*storeType {
+	if testing.Short() {
+		return nil
+	}
+
+	var stores []*storeType
+
 	// In CI, we already run the entire test suite for both mysql and postgres in parallel.
 	// So we just run the tests for the current database set.
 	if os.Getenv("IS_CI") == "true" {
 		switch os.Getenv("MM_SQLSETTINGS_DRIVERNAME") {
 		case "mysql":
-			storeTypes = append(storeTypes, newStoreType("MySQL", model.DatabaseDriverMysql))
+			stores = append(stores, newStoreType("MySQL", model.DatabaseDriverMysql))
 		case "postgres":
-			storeTypes = append(storeTypes, newStoreType("PostgreSQL", model.DatabaseDriverPostgres))
+			stores = append(stores, newStoreType("PostgreSQL", model.DatabaseDriverPostgres))
 		}
 	} else {
-		storeTypes = append(storeTypes,
+		stores = append(stores,
 			newStoreType("MySQL", model.DatabaseDriverMysql),
 			newStoreType("PostgreSQL", model.DatabaseDriverPostgres),
 		)
@@ -130,22 +211,27 @@ func initStores(logger mlog.LoggerIFace) {
 
 	defer func() {
 		if err := recover(); err != nil {
-			tearDownStores()
+			tearDownStores(stores)
 			panic(err)
 		}
 	}()
 
 	var eg errgroup.Group
-	for _, st := range storeTypes {
+	for _, st := range stores {
 		st := st
 		eg.Go(func() error {
 			var err error
-			st.SqlStore, err = New(*st.SqlSettings, logger, nil)
+			st.SqlStore, err = New(*st.SqlSettings, logger, nil, SkipMigrations())
 			if err != nil {
 				return err
 			}
+
+			preloadSchema(*st.SqlSettings.DriverName, st.SqlStore)
+
 			st.Store = st.SqlStore
-			st.Store.DropAllTables()
+			if !enableFullyParallelTests {
+				st.Store.DropAllTables()
+			}
 			st.Store.MarkSystemRanUnitTests()
 
 			return nil
@@ -154,30 +240,36 @@ func initStores(logger mlog.LoggerIFace) {
 	if err := eg.Wait(); err != nil {
 		panic(err)
 	}
+
+	return stores
 }
 
 var tearDownStoresOnce sync.Once
 
-func tearDownStores() {
+func tearDownStores(stores []*storeType) {
 	if testing.Short() {
 		return
 	}
+	var wg sync.WaitGroup
+	wg.Add(len(stores))
+	for _, st := range stores {
+		st := st
+		go func() {
+			if st.Store != nil {
+				st.Store.Close()
+			}
+			if st.SqlSettings != nil {
+				storetest.CleanupSqlSettings(st.SqlSettings)
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func tearDownGlobalStores() {
 	tearDownStoresOnce.Do(func() {
-		var wg sync.WaitGroup
-		wg.Add(len(storeTypes))
-		for _, st := range storeTypes {
-			st := st
-			go func() {
-				if st.Store != nil {
-					st.Store.Close()
-				}
-				if st.SqlSettings != nil {
-					storetest.CleanupSqlSettings(st.SqlSettings)
-				}
-				wg.Done()
-			}()
-		}
-		wg.Wait()
+		tearDownStores(storeTypes)
 	})
 }
 
@@ -185,6 +277,7 @@ func tearDownStores() {
 // before the fix in MM-28397.
 // Keeping it here to help avoiding future regressions.
 func TestStoreLicenseRace(t *testing.T) {
+	t.Parallel()
 	logger := mlog.CreateTestLogger(t)
 
 	settings, err := makeSqlSettings(model.DatabaseDriverPostgres)
@@ -192,8 +285,9 @@ func TestStoreLicenseRace(t *testing.T) {
 		t.Skip(err)
 	}
 
-	store, err := New(*settings, logger, nil)
+	store, err := New(*settings, logger, nil, SkipMigrations())
 	require.NoError(t, err)
+	preloadSchema(*settings.DriverName, store)
 	defer func() {
 		store.Close()
 		storetest.CleanupSqlSettings(settings)
@@ -295,8 +389,9 @@ func TestGetReplica(t *testing.T) {
 
 			settings.DataSourceReplicas = dataSourceReplicas
 			settings.DataSourceSearchReplicas = dataSourceSearchReplicas
-			store, err := New(*settings, logger, nil)
+			store, err := New(*settings, logger, nil, SkipMigrations())
 			require.NoError(t, err)
+			preloadSchema(*settings.DriverName, store)
 			defer func() {
 				store.Close()
 				storetest.CleanupSqlSettings(settings)
@@ -368,8 +463,9 @@ func TestGetReplica(t *testing.T) {
 
 			settings.DataSourceReplicas = dataSourceReplicas
 			settings.DataSourceSearchReplicas = dataSourceSearchReplicas
-			store, err := New(*settings, logger, nil)
+			store, err := New(*settings, logger, nil, SkipMigrations())
 			require.NoError(t, err)
+			preloadSchema(*settings.DriverName, store)
 			defer func() {
 				store.Close()
 				storetest.CleanupSqlSettings(settings)
@@ -438,8 +534,14 @@ func TestGetDbVersion(t *testing.T) {
 				t.Skip(err)
 			}
 
-			store, err := New(*settings, logger, nil)
+			store, err := New(*settings, logger, nil, SkipMigrations())
 			require.NoError(t, err)
+			preloadSchema(*settings.DriverName, store)
+
+			t.Cleanup(func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			})
 
 			version, err := store.GetDbVersion(false)
 			require.NoError(t, err)
@@ -664,8 +766,9 @@ func TestGetAllConns(t *testing.T) {
 
 			settings.DataSourceReplicas = dataSourceReplicas
 			settings.DataSourceSearchReplicas = dataSourceSearchReplicas
-			store, err := New(*settings, logger, nil)
+			store, err := New(*settings, logger, nil, SkipMigrations())
 			require.NoError(t, err)
+			preloadSchema(*settings.DriverName, store)
 			defer func() {
 				store.Close()
 				storetest.CleanupSqlSettings(settings)
@@ -742,6 +845,7 @@ func TestReplicaLagQuery(t *testing.T) {
 
 	for _, driver := range testDrivers {
 		t.Run(driver, func(t *testing.T) {
+			t.Parallel()
 			settings, err := makeSqlSettings(driver)
 			if err != nil {
 				t.Skip(err)
@@ -784,7 +888,10 @@ func TestReplicaLagQuery(t *testing.T) {
 			err = store.migrate(migrationsDirectionUp, false)
 			require.NoError(t, err)
 
-			defer store.Close()
+			t.Cleanup(func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			})
 
 			err = store.ReplicaLagAbs()
 			require.NoError(t, err)
@@ -795,8 +902,10 @@ func TestReplicaLagQuery(t *testing.T) {
 	}
 }
 
-var errDriverMismatch = errors.New("database drivers mismatch")
-var errDriverUnsupported = errors.New("database driver not supported")
+var (
+	errDriverMismatch    = errors.New("database drivers mismatch")
+	errDriverUnsupported = errors.New("database driver not supported")
+)
 
 func makeSqlSettings(driver string) (*model.SqlSettings, error) {
 	// When running under CI, only one database engine container is launched
@@ -838,6 +947,7 @@ func TestExecNoTimeout(t *testing.T) {
 }
 
 func TestMySQLReadTimeout(t *testing.T) {
+	t.Parallel()
 	settings, err := makeSqlSettings(model.DatabaseDriverMysql)
 	if err != nil {
 		t.Skip(err)
@@ -857,7 +967,11 @@ func TestMySQLReadTimeout(t *testing.T) {
 		wgMonitor:   &sync.WaitGroup{},
 	}
 	require.NoError(t, store.initConnection())
-	defer store.Close()
+
+	defer func() {
+		store.Close()
+		storetest.CleanupSqlSettings(settings)
+	}()
 
 	_, err = store.GetMaster().ExecNoTimeout(`SELECT SLEEP(3)`)
 	require.NoError(t, err)
@@ -882,6 +996,11 @@ func TestGetDBSchemaVersion(t *testing.T) {
 			}
 			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
+
+			t.Cleanup(func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			})
 
 			assetsList, err := assets.ReadDir(filepath.Join("migrations", driver))
 			require.NoError(t, err)
@@ -914,12 +1033,18 @@ func TestGetLocalSchemaVersion(t *testing.T) {
 	for _, d := range testDrivers {
 		driver := d
 		t.Run(driver, func(t *testing.T) {
+			t.Parallel()
 			settings, err := makeSqlSettings(driver)
 			if err != nil {
 				t.Skip(err)
 			}
 			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
+
+			t.Cleanup(func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			})
 
 			ver, err := store.GetLocalSchemaVersion()
 			require.NoError(t, err)
@@ -950,6 +1075,11 @@ func TestGetAppliedMigrations(t *testing.T) {
 			}
 			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
+
+			t.Cleanup(func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			})
 
 			assetsList, err := assets.ReadDir(filepath.Join("migrations", driver))
 			require.NoError(t, err)
@@ -998,6 +1128,11 @@ func TestSkipMigrationsOption(t *testing.T) {
 
 			store, err := New(*settings, logger, nil, SkipMigrations())
 			require.NoError(t, err)
+
+			defer func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			}()
 
 			_, err = store.GetDBSchemaVersion()
 			assert.Error(t, err)

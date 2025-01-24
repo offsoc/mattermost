@@ -4,8 +4,12 @@
 package sqlstore_test
 
 import (
+	"flag"
+	"os"
+	"strconv"
 	"testing"
 
+	"github.com/mattermost/mattermost/server/public/shared/mlog"
 	"github.com/mattermost/mattermost/server/v8/channels/store/sqlstore"
 	"github.com/mattermost/mattermost/server/v8/channels/testlib"
 )
@@ -13,10 +17,21 @@ import (
 var mainHelper *testlib.MainHelper
 
 func TestMain(m *testing.M) {
-	mainHelper = testlib.NewMainHelperWithOptions(nil)
+	var parallelism int
+	if f := flag.Lookup("test.parallel"); f != nil {
+		parallelism, _ = strconv.Atoi(f.Value.String())
+	}
+	runParallel := os.Getenv("ENABLE_FULLY_PARALLEL_TESTS") == "true" && parallelism > 1
+	if runParallel {
+		mlog.Info("Fully parallel tests enabled", mlog.Int("parallelism", parallelism))
+	}
+
+	mainHelper = testlib.NewMainHelperWithOptions(&testlib.HelperOptions{
+		RunParallel: runParallel,
+	})
 	defer mainHelper.Close()
 
-	sqlstore.InitTest(mainHelper.Logger)
+	sqlstore.InitTest(mainHelper.Logger, runParallel)
 
 	mainHelper.Main(m)
 	sqlstore.TearDownTest()

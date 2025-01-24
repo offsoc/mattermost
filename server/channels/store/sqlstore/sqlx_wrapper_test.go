@@ -14,9 +14,14 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
+	"github.com/mattermost/mattermost/server/v8/channels/store/storetest"
 )
 
 func TestSqlX(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	t.Run("NamedQuery", func(t *testing.T) {
 		testDrivers := []string{
 			model.DatabaseDriverPostgres,
@@ -24,37 +29,46 @@ func TestSqlX(t *testing.T) {
 		}
 
 		for _, driver := range testDrivers {
-			settings, err := makeSqlSettings(driver)
-			if err != nil {
-				continue
-			}
-			*settings.QueryTimeout = 1
-			store := &SqlStore{
-				rrCounter:   0,
-				srCounter:   0,
-				settings:    settings,
-				logger:      mlog.CreateConsoleTestLogger(t),
-				quitMonitor: make(chan struct{}),
-				wgMonitor:   &sync.WaitGroup{},
-			}
+			t.Run(driver, func(t *testing.T) {
+				if enableFullyParallelTests {
+					t.Parallel()
+				}
+				settings, err := makeSqlSettings(driver)
+				if err != nil {
+					t.Skip(err)
+				}
 
-			require.NoError(t, store.initConnection())
+				*settings.QueryTimeout = 1
+				store := &SqlStore{
+					rrCounter:   0,
+					srCounter:   0,
+					settings:    settings,
+					logger:      mlog.CreateConsoleTestLogger(t),
+					quitMonitor: make(chan struct{}),
+					wgMonitor:   &sync.WaitGroup{},
+				}
 
-			defer store.Close()
+				require.NoError(t, store.initConnection())
 
-			tx, err := store.GetMaster().Beginx()
-			require.NoError(t, err)
+				t.Cleanup(func() {
+					store.Close()
+					storetest.CleanupSqlSettings(settings)
+				})
 
-			var query string
-			if store.DriverName() == model.DatabaseDriverMysql {
-				query = `SELECT SLEEP(:Timeout);`
-			} else if store.DriverName() == model.DatabaseDriverPostgres {
-				query = `SELECT pg_sleep(:timeout);`
-			}
-			arg := struct{ Timeout int }{Timeout: 2}
-			_, err = tx.NamedQuery(query, arg)
-			require.Equal(t, context.DeadlineExceeded, err)
-			require.NoError(t, tx.Commit())
+				tx, err := store.GetMaster().Beginx()
+				require.NoError(t, err)
+
+				var query string
+				if store.DriverName() == model.DatabaseDriverMysql {
+					query = `SELECT SLEEP(:Timeout);`
+				} else if store.DriverName() == model.DatabaseDriverPostgres {
+					query = `SELECT pg_sleep(:timeout);`
+				}
+				arg := struct{ Timeout int }{Timeout: 2}
+				_, err = tx.NamedQuery(query, arg)
+				require.Equal(t, context.DeadlineExceeded, err)
+				require.NoError(t, tx.Commit())
+			})
 		}
 	})
 

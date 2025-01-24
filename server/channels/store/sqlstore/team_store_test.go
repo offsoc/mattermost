@@ -18,6 +18,10 @@ func TestTeamStore(t *testing.T) {
 }
 
 func TestTeamStoreInternalDataTypes(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	t.Run("NewTeamMemberFromModel", func(t *testing.T) { testNewTeamMemberFromModel(t) })
 	t.Run("TeamMemberWithSchemeRolesToModel", func(t *testing.T) { testTeamMemberWithSchemeRolesToModel(t) })
 }

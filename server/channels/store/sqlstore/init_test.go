@@ -7,10 +7,13 @@ import (
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
 )
 
-func InitTest(logger mlog.LoggerIFace) {
-	initStores(logger)
+var enableFullyParallelTests bool
+
+func InitTest(logger mlog.LoggerIFace, runParallel bool) {
+	enableFullyParallelTests = runParallel
+	storeTypes = initStores(logger)
 }
 
 func TearDownTest() {
-	tearDownStores()
+	tearDownGlobalStores()
 }

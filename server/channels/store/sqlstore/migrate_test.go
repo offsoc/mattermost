@@ -8,11 +8,15 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
+	"github.com/mattermost/mattermost/server/v8/channels/store/storetest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUpAndDownMigrations(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
 	logger := mlog.CreateTestLogger(t)
 
 	testDrivers := []string{
@@ -22,6 +26,10 @@ func TestUpAndDownMigrations(t *testing.T) {
 
 	for _, driver := range testDrivers {
 		t.Run("Should be reversible for "+driver, func(t *testing.T) {
+			if enableFullyParallelTests {
+				t.Parallel()
+			}
+
 			settings, err := makeSqlSettings(driver)
 			if err != nil {
 				t.Skip(err)
@@ -29,7 +37,11 @@ func TestUpAndDownMigrations(t *testing.T) {
 
 			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
-			defer store.Close()
+
+			t.Cleanup(func() {
+				store.Close()
+				storetest.CleanupSqlSettings(settings)
+			})
 
 			err = store.migrate(migrationsDirectionDown, false)
 			assert.NoError(t, err, "downing migrations should not error")

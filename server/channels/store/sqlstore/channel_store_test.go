@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/mattermost/mattermost/server/public/shared/mlog"
 	"github.com/mattermost/mattermost/server/v8/channels/store"
 	"github.com/mattermost/mattermost/server/v8/channels/store/searchtest"
 	"github.com/mattermost/mattermost/server/v8/channels/store/storetest"
@@ -25,10 +26,23 @@ func TestSearchChannelStore(t *testing.T) {
 }
 
 func TestChannelSearchQuerySQLInjection(t *testing.T) {
-	for _, st := range storeTypes {
+	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
+
+	for _, st := range stores {
 		t.Run(st.Name, func(t *testing.T) {
 			s := &SqlChannelStore{
 				SqlStore: st.SqlStore,
+			}
+
+			if enableFullyParallelTests {
+				t.Parallel()
 			}
 
 			opts := store.ChannelSearchOpts{Term: "'or'1'=sleep(3))); -- -"}
@@ -41,6 +55,10 @@ func TestChannelSearchQuerySQLInjection(t *testing.T) {
 }
 
 func TestChannelStoreInternalDataTypes(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	t.Run("NewMapFromChannelMemberModel", func(t *testing.T) { testNewMapFromChannelMemberModel(t) })
 	t.Run("ChannelMemberWithSchemeRolesToModel", func(t *testing.T) { testChannelMemberWithSchemeRolesToModel(t) })
 	t.Run("AllChannelMemberProcess", func(t *testing.T) { testAllChannelMemberProcess(t) })
