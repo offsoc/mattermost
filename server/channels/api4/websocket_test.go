@@ -21,6 +21,9 @@ import (
 )
 
 func TestWebSocketTrailingSlash(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 
@@ -30,6 +33,9 @@ func TestWebSocketTrailingSlash(t *testing.T) {
 }
 
 func TestWebSocketEvent(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -99,6 +105,9 @@ func TestWebSocketEvent(t *testing.T) {
 }
 
 func TestCreateDirectChannelWithSocket(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -154,6 +163,9 @@ func TestCreateDirectChannelWithSocket(t *testing.T) {
 }
 
 func TestWebsocketOriginSecurity(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 
@@ -204,6 +216,9 @@ func TestWebsocketOriginSecurity(t *testing.T) {
 }
 
 func TestWebSocketReconnectRace(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -238,6 +253,9 @@ func TestWebSocketReconnectRace(t *testing.T) {
 }
 
 func TestWebSocketSendBinary(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -281,6 +299,9 @@ func TestWebSocketSendBinary(t *testing.T) {
 }
 
 func TestWebSocketStatuses(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -423,6 +444,9 @@ func TestWebSocketStatuses(t *testing.T) {
 }
 
 func TestWebSocketPresence(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -456,6 +480,9 @@ func TestWebSocketPresence(t *testing.T) {
 }
 
 func TestWebSocketUpgrade(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 

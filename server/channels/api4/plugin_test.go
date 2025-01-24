@@ -32,6 +32,9 @@ import (
 )
 
 func TestPlugin(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 
@@ -286,6 +289,9 @@ func TestPlugin(t *testing.T) {
 }
 
 func TestNotifyClusterPluginEvent(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 
@@ -380,6 +386,9 @@ func TestNotifyClusterPluginEvent(t *testing.T) {
 }
 
 func TestDisableOnRemove(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	path, _ := fileutils.FindDir("tests")
 	tarData, err := os.ReadFile(filepath.Join(path, "testplugin.tar.gz"))
 	require.NoError(t, err)
@@ -1141,6 +1150,9 @@ func TestGetLocalPluginInMarketplace(t *testing.T) {
 }
 
 func TestGetRemotePluginInMarketplace(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 
@@ -1330,6 +1342,9 @@ func TestGetPrepackagedPluginInMarketplace(t *testing.T) {
 }
 
 func TestGetPrepackagedPlaybooksPluginIn(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t)
 	defer th.TearDown()
 
@@ -1758,6 +1773,9 @@ func TestInstallMarketplacePlugin(t *testing.T) {
 }
 
 func TestInstallMarketplacePluginPrepackagedDisabled(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	path, _ := fileutils.FindDir("tests")
 
 	signatureFilename := "testplugin2.tar.gz.sig"
@@ -2095,6 +2113,9 @@ func findClusterMessages(event model.ClusterEvent, msgs []*model.ClusterMessage)
 }
 
 func TestPluginWebSocketSession(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -2147,6 +2168,9 @@ func TestPluginWebSocketSession(t *testing.T) {
 }
 
 func TestPluginWebSocketRemoteAddress(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 

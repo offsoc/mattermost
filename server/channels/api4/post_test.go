@@ -34,6 +34,10 @@ import (
 )
 
 func TestCreatePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -124,9 +128,7 @@ func TestCreatePost(t *testing.T) {
 	})
 
 	t.Run("Create posts without the USE_CHANNEL_MENTIONS Permission - returns ephemeral message with mentions and no ephemeral message without mentions", func(t *testing.T) {
-		WebSocketClient, err := th.CreateWebSocketClient()
-		WebSocketClient.Listen()
-		require.NoError(t, err)
+		WebSocketClient := th.CreateConnectedWebSocketClient(t)
 
 		defaultPerms := th.SaveDefaultRolePermissions()
 		defer th.RestoreDefaultRolePermissions(defaultPerms)
@@ -135,7 +137,7 @@ func TestCreatePost(t *testing.T) {
 
 		post.RootId = rpost.Id
 		post.Message = "a post with no channel mentions"
-		_, _, err = client.CreatePost(context.Background(), post)
+		_, _, err := client.CreatePost(context.Background(), post)
 		require.NoError(t, err)
 
 		// Message with no channel mentions should result in no ephemeral message
@@ -260,6 +262,10 @@ func TestCreatePost(t *testing.T) {
 }
 
 func TestCreatePostForPriority(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -433,6 +439,9 @@ func TestCreatePostForPriority(t *testing.T) {
 }
 
 func TestCreatePostWithOAuthClient(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -501,6 +510,10 @@ func TestCreatePostWithOAuthClient(t *testing.T) {
 }
 
 func TestCreatePostEphemeral(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.SystemAdminClient
@@ -539,6 +552,10 @@ func testCreatePostWithOutgoingHook(
 	triggerWhen int,
 	commentPostType bool,
 ) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	user := th.SystemAdminUser
@@ -623,7 +640,7 @@ func testCreatePostWithOutgoingHook(
 			}
 		}
 
-		respPostType := "" //if is empty or post will do a normal post.
+		respPostType := "" // if is empty or post will do a normal post.
 		if commentPostType {
 			respPostType = model.OutgoingHookResponseTypeComment
 		}
@@ -1001,8 +1018,10 @@ func TestMoveThread(t *testing.T) {
 		// Set permitted role as channel admin
 		enabled := true
 		th.App.UpdateConfig(func(cfg *model.Config) {
-			cfg.WranglerSettings = model.WranglerSettings{MoveThreadToAnotherTeamEnable: &enabled,
-				PermittedWranglerRoles: []string{model.PermissionsChannelAdmin}}
+			cfg.WranglerSettings = model.WranglerSettings{
+				MoveThreadToAnotherTeamEnable: &enabled,
+				PermittedWranglerRoles:        []string{model.PermissionsChannelAdmin},
+			}
 		})
 		defer th.App.UpdateConfig(func(cfg *model.Config) {
 			cfg.WranglerSettings = model.WranglerSettings{}
@@ -1043,6 +1062,10 @@ func TestMoveThread(t *testing.T) {
 }
 
 func TestCreatePostPublic(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -1100,6 +1123,10 @@ func TestCreatePostPublic(t *testing.T) {
 }
 
 func TestCreatePostAll(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -1166,13 +1193,15 @@ func TestCreatePostAll(t *testing.T) {
 }
 
 func TestCreatePostSendOutOfChannelMentions(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
 
-	WebSocketClient, err := th.CreateWebSocketClient()
-	require.NoError(t, err)
-	WebSocketClient.Listen()
+	WebSocketClient := th.CreateConnectedWebSocketClient(t)
 
 	inChannelUser := th.CreateUser()
 	th.LinkUserToTeam(inChannelUser, th.BasicTeam)
@@ -1230,6 +1259,10 @@ func TestCreatePostSendOutOfChannelMentions(t *testing.T) {
 }
 
 func TestCreatePostCheckOnlineStatus(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -1300,6 +1333,10 @@ func TestCreatePostCheckOnlineStatus(t *testing.T) {
 }
 
 func TestUpdatePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -1650,6 +1687,10 @@ func TestUpdatePost(t *testing.T) {
 }
 
 func TestUpdateOthersPostInDirectMessageChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	// This test checks that a sysadmin with the "EDIT_OTHERS_POSTS" permission can edit someone else's post in a
 	// channel without a team (DM/GM). This indirectly checks for the proper cascading all the way to system-wide roles
 	// on the user object of permissions based on a post in a channel with no team ID.
@@ -1675,6 +1716,10 @@ func TestUpdateOthersPostInDirectMessageChannel(t *testing.T) {
 }
 
 func TestPatchPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2001,6 +2046,10 @@ func TestPatchPost(t *testing.T) {
 }
 
 func TestPinPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2032,6 +2081,10 @@ func TestPinPost(t *testing.T) {
 }
 
 func TestUnpinPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2063,6 +2116,10 @@ func TestUnpinPost(t *testing.T) {
 }
 
 func TestGetPostsForChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2306,6 +2363,10 @@ func TestGetPostsForChannel(t *testing.T) {
 }
 
 func TestGetFlaggedPostsForUser(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2512,6 +2573,10 @@ func TestGetFlaggedPostsForUser(t *testing.T) {
 }
 
 func TestGetPostsBefore(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2679,6 +2744,10 @@ func TestGetPostsBefore(t *testing.T) {
 }
 
 func TestGetPostsAfter(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -2827,6 +2896,10 @@ func TestGetPostsAfter(t *testing.T) {
 }
 
 func TestGetPostsForChannelAroundLastUnread(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -3080,6 +3153,10 @@ func TestGetPostsForChannelAroundLastUnread(t *testing.T) {
 }
 
 func TestGetPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	// TODO: migrate this entirely to the subtest's client
@@ -3179,6 +3256,10 @@ func TestGetPost(t *testing.T) {
 }
 
 func TestDeletePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -3235,6 +3316,10 @@ func TestDeletePost(t *testing.T) {
 }
 
 func TestPermanentDeletePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -3312,6 +3397,10 @@ func TestPermanentDeletePost(t *testing.T) {
 }
 
 func TestWebHubMembership(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3437,6 +3526,10 @@ func TestWebHubMembership(t *testing.T) {
 }
 
 func TestWebHubCloseConnOnDBFail(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer func() {
 		th.TearDown()
@@ -3461,15 +3554,16 @@ func TestWebHubCloseConnOnDBFail(t *testing.T) {
 }
 
 func TestDeletePostEvent(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
-	WebSocketClient, err := th.CreateWebSocketClient()
-	require.NoError(t, err)
-	WebSocketClient.Listen()
-	defer WebSocketClient.Close()
+	WebSocketClient := th.CreateConnectedWebSocketClient(t)
 
-	_, err = th.SystemAdminClient.DeletePost(context.Background(), th.BasicPost.Id)
+	_, err := th.SystemAdminClient.DeletePost(context.Background(), th.BasicPost.Id)
 	require.NoError(t, err)
 
 	var received, exit bool
@@ -3491,6 +3585,10 @@ func TestDeletePostEvent(t *testing.T) {
 }
 
 func TestDeletePostMessage(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	th.LinkUserToTeam(th.SystemAdminUser, th.BasicTeam)
 	_, appErr := th.App.AddUserToChannel(th.Context, th.SystemAdminUser, th.BasicChannel, false)
@@ -3541,6 +3639,10 @@ func TestDeletePostMessage(t *testing.T) {
 }
 
 func TestGetPostThread(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -3617,6 +3719,10 @@ func TestGetPostThread(t *testing.T) {
 }
 
 func TestSearchPosts(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	experimentalViewArchivedChannels := *th.App.Config().TeamSettings.ExperimentalViewArchivedChannels
@@ -3769,6 +3875,10 @@ func TestSearchPosts(t *testing.T) {
 }
 
 func TestSearchHashtagPosts(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.LoginBasic()
@@ -3795,6 +3905,10 @@ func TestSearchHashtagPosts(t *testing.T) {
 }
 
 func TestSearchPostsInChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.LoginBasic()
@@ -3849,6 +3963,10 @@ func TestSearchPostsInChannel(t *testing.T) {
 }
 
 func TestSearchPostsFromUser(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -3917,6 +4035,10 @@ func TestSearchPostsFromUser(t *testing.T) {
 }
 
 func TestSearchPostsWithDateFlags(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.LoginBasic()
@@ -4060,6 +4182,10 @@ func TestGetFileInfosForPost(t *testing.T) {
 }
 
 func TestSetChannelUnread(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -4234,6 +4360,10 @@ func TestSetChannelUnread(t *testing.T) {
 }
 
 func TestSetPostUnreadWithoutCollapsedThreads(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.App.UpdateConfig(func(cfg *model.Config) {
@@ -4265,12 +4395,9 @@ func TestSetPostUnreadWithoutCollapsedThreads(t *testing.T) {
 	require.Nil(t, appErr)
 
 	t.Run("Mark reply post as unread", func(t *testing.T) {
-		userWSClient, err := th.CreateWebSocketClient()
-		require.NoError(t, err)
-		defer userWSClient.Close()
-		userWSClient.Listen()
+		userWSClient := th.CreateConnectedWebSocketClient(t)
 
-		_, err = th.Client.SetPostUnread(context.Background(), th.BasicUser.Id, replyPost1.Id, false)
+		_, err := th.Client.SetPostUnread(context.Background(), th.BasicUser.Id, replyPost1.Id, false)
 		require.NoError(t, err)
 		channelUnread, appErr := th.App.GetChannelUnread(th.Context, th.BasicChannel.Id, th.BasicUser.Id)
 		require.Nil(t, appErr)
@@ -4330,7 +4457,12 @@ func TestSetPostUnreadWithoutCollapsedThreads(t *testing.T) {
 		require.Equal(t, int64(3), channelUnread.MsgCountRoot)
 	})
 }
+
 func TestGetPostsByIds(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -4355,6 +4487,10 @@ func TestGetPostsByIds(t *testing.T) {
 }
 
 func TestGetEditHistoryForPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -4475,6 +4611,10 @@ func TestGetEditHistoryForPost(t *testing.T) {
 }
 
 func TestCreatePostNotificationsWithCRT(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	rpost := th.CreatePost()
@@ -4578,10 +4718,7 @@ func TestCreatePostNotificationsWithCRT(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			userWSClient, err := th.CreateWebSocketClient()
-			require.NoError(t, err)
-			defer userWSClient.Close()
-			userWSClient.Listen()
+			userWSClient := th.CreateConnectedWebSocketClient(t)
 
 			patch := &model.UserPatch{}
 			patch.NotifyProps = model.CopyStringMap(th.BasicUser.NotifyProps)
@@ -4590,7 +4727,7 @@ func TestCreatePostNotificationsWithCRT(t *testing.T) {
 			}
 
 			// update user's notify props
-			_, _, err = th.Client.PatchUser(context.Background(), th.BasicUser.Id, patch)
+			_, _, err := th.Client.PatchUser(context.Background(), th.BasicUser.Id, patch)
 			require.NoError(t, err)
 
 			// post a reply on the thread
@@ -4631,6 +4768,10 @@ func TestCreatePostNotificationsWithCRT(t *testing.T) {
 }
 
 func TestGetPostStripActionIntegrations(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client
@@ -4689,10 +4830,7 @@ func TestPostReminder(t *testing.T) {
 	defer th.TearDown()
 
 	client := th.Client
-	userWSClient, err := th.CreateWebSocketClient()
-	require.NoError(t, err)
-	defer userWSClient.Close()
-	userWSClient.Listen()
+	userWSClient := th.CreateConnectedWebSocketClient(t)
 
 	targetTime := time.Now().UTC().Unix()
 	resp, err := client.SetPostReminder(context.Background(), &model.PostReminder{
@@ -4745,6 +4883,10 @@ func TestPostReminder(t *testing.T) {
 }
 
 func TestPostGetInfo(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -5014,6 +5156,10 @@ func TestPostGetInfo(t *testing.T) {
 }
 
 func TestAcknowledgePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.App.Srv().SetLicense(model.NewTestLicenseSKU(model.LicenseShortSkuProfessional))
@@ -5055,6 +5201,10 @@ func TestAcknowledgePost(t *testing.T) {
 }
 
 func TestUnacknowledgePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.App.Srv().SetLicense(model.NewTestLicenseSKU(model.LicenseShortSkuProfessional))
@@ -5100,6 +5250,10 @@ func TestUnacknowledgePost(t *testing.T) {
 }
 
 func TestRestorePostVersion(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
+
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	client := th.Client

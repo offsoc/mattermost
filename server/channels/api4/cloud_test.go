@@ -17,6 +17,9 @@ import (
 )
 
 func Test_GetSubscription(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	deliquencySince := int64(2000000000)
 
 	subscription := &model.Subscription{
@@ -103,6 +106,9 @@ func Test_GetSubscription(t *testing.T) {
 }
 
 func Test_validateBusinessEmail(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("Returns forbidden for invalid business email", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -169,6 +175,9 @@ func Test_validateBusinessEmail(t *testing.T) {
 }
 
 func Test_validateWorkspaceBusinessEmail(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("validate the Cloud Customer has used a valid email to create the workspace", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -271,6 +280,9 @@ func Test_validateWorkspaceBusinessEmail(t *testing.T) {
 }
 
 func TestGetCloudProducts(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	cloudProducts := []*model.Product{
 		{
 			ID:                "prod_test1",
@@ -418,6 +430,9 @@ func TestGetCloudProducts(t *testing.T) {
 }
 
 func TestGetSelfHostedProducts(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	products := []*model.Product{
 		{
 			ID:                "prod_test",

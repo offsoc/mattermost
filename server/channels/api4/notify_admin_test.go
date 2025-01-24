@@ -13,6 +13,9 @@ import (
 )
 
 func TestNotifyAdmin(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("error when notifying with empty data", func(t *testing.T) {
 		th := Setup(t).InitBasic().InitLogin()
 		defer th.TearDown()
@@ -118,6 +121,9 @@ func TestNotifyAdmin(t *testing.T) {
 }
 
 func TestTriggerNotifyAdmin(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("error when EnableAPITriggerAdminNotifications is not true", func(t *testing.T) {
 		th := Setup(t).InitBasic().InitLogin()
 		defer th.TearDown()
