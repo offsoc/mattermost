@@ -28,6 +28,9 @@ import (
 )
 
 func TestCreatePostDeduplicate(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -196,6 +199,9 @@ func TestCreatePostDeduplicate(t *testing.T) {
 }
 
 func TestAttachFilesToPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("should attach files", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -263,6 +269,9 @@ func TestAttachFilesToPost(t *testing.T) {
 }
 
 func TestUpdatePostEditAt(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -285,6 +294,9 @@ func TestUpdatePostEditAt(t *testing.T) {
 }
 
 func TestUpdatePostTimeLimit(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -319,6 +331,9 @@ func TestUpdatePostTimeLimit(t *testing.T) {
 }
 
 func TestUpdatePostInArchivedChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -332,6 +347,9 @@ func TestUpdatePostInArchivedChannel(t *testing.T) {
 }
 
 func TestPostReplyToPostWhereRootPosterLeftChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	// This test ensures that when replying to a root post made by a user who has since left the channel, the reply
 	// post completes successfully. This is a regression test for PLT-6523.
 	th := Setup(t).InitBasic()
@@ -361,6 +379,9 @@ func TestPostReplyToPostWhereRootPosterLeftChannel(t *testing.T) {
 }
 
 func TestPostAttachPostToChildPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -406,6 +427,9 @@ func TestPostAttachPostToChildPost(t *testing.T) {
 }
 
 func TestUpdatePostPluginHooks(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -547,6 +571,9 @@ func TestUpdatePostPluginHooks(t *testing.T) {
 }
 
 func TestPostChannelMentions(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -607,6 +634,9 @@ func TestPostChannelMentions(t *testing.T) {
 }
 
 func TestImageProxy(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := SetupWithStoreMock(t)
 	defer th.TearDown()
 
@@ -730,6 +760,9 @@ func TestImageProxy(t *testing.T) {
 }
 
 func TestDeletePostWithFileAttachments(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -772,6 +805,9 @@ func TestDeletePostWithFileAttachments(t *testing.T) {
 }
 
 func TestDeletePostInArchivedChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -785,6 +821,9 @@ func TestDeletePostInArchivedChannel(t *testing.T) {
 }
 
 func TestCreatePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("call PreparePostForClient before returning", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -1163,6 +1202,9 @@ func TestCreatePost(t *testing.T) {
 }
 
 func TestPatchPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("call PreparePostForClient before returning", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -1250,6 +1292,9 @@ func TestPatchPost(t *testing.T) {
 }
 
 func TestCreatePostAsUser(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("marks channel as viewed for regular user", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -1426,6 +1471,9 @@ func TestCreatePostAsUser(t *testing.T) {
 }
 
 func TestPatchPostInArchivedChannel(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -1439,6 +1487,9 @@ func TestPatchPostInArchivedChannel(t *testing.T) {
 }
 
 func TestUpdateEphemeralPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("Post contains preview if the user has permissions", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -1509,6 +1560,9 @@ func TestUpdateEphemeralPost(t *testing.T) {
 }
 
 func TestUpdatePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("call PreparePostForClient before returning", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -1649,6 +1703,9 @@ func TestUpdatePost(t *testing.T) {
 }
 
 func TestSearchPostsForUser(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	perPage := 5
 	searchTerm := "searchTerm"
 
@@ -1873,6 +1930,9 @@ func TestSearchPostsForUser(t *testing.T) {
 }
 
 func TestCountMentionsFromPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("should not count posts without mentions", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -2608,6 +2668,9 @@ func TestCountMentionsFromPost(t *testing.T) {
 }
 
 func TestFillInPostProps(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("should not add disable group highlight to post props for user with group mention permissions", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -2697,6 +2760,9 @@ func TestFillInPostProps(t *testing.T) {
 }
 
 func TestThreadMembership(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("should update memberships for conversation participants", func(t *testing.T) {
 		th := Setup(t).InitBasic()
 		defer th.TearDown()
@@ -2758,6 +2824,9 @@ func TestThreadMembership(t *testing.T) {
 }
 
 func TestFollowThreadSkipsParticipants(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -2826,6 +2895,9 @@ func TestFollowThreadSkipsParticipants(t *testing.T) {
 }
 
 func TestAutofollowBasedOnRootPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -2854,6 +2926,9 @@ func TestAutofollowBasedOnRootPost(t *testing.T) {
 }
 
 func TestViewChannelShouldNotUpdateThreads(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -2887,6 +2962,9 @@ func TestViewChannelShouldNotUpdateThreads(t *testing.T) {
 }
 
 func TestCollapsedThreadFetch(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3082,6 +3160,9 @@ func TestReplyToPostWithLag(t *testing.T) {
 }
 
 func TestSharedChannelSyncForPostActions(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("creating a post in a shared channel performs a content sync when sync service is running on that node", func(t *testing.T) {
 		th := setupSharedChannels(t).InitBasic()
 		defer th.TearDown()
@@ -3166,6 +3247,9 @@ func TestSharedChannelSyncForPostActions(t *testing.T) {
 }
 
 func TestAutofollowOnPostingAfterUnfollow(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3207,6 +3291,9 @@ func TestAutofollowOnPostingAfterUnfollow(t *testing.T) {
 }
 
 func TestGetPostIfAuthorized(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3271,6 +3358,9 @@ func TestGetPostIfAuthorized(t *testing.T) {
 }
 
 func TestShouldNotRefollowOnOthersReply(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3320,6 +3410,9 @@ func TestShouldNotRefollowOnOthersReply(t *testing.T) {
 }
 
 func TestGetLastAccessiblePostTime(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := SetupWithStoreMock(t)
 	defer th.TearDown()
 
@@ -3353,6 +3446,9 @@ func TestGetLastAccessiblePostTime(t *testing.T) {
 }
 
 func TestComputeLastAccessiblePostTime(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	t.Run("Updates the time, if cloud limit is applicable", func(t *testing.T) {
 		th := SetupWithStoreMock(t)
 		defer th.TearDown()
@@ -3410,6 +3506,9 @@ func TestComputeLastAccessiblePostTime(t *testing.T) {
 }
 
 func TestGetEditHistoryForPost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3551,6 +3650,9 @@ func TestGetEditHistoryForPost(t *testing.T) {
 }
 
 func TestCopyWranglerPostlist(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3603,6 +3705,9 @@ func TestCopyWranglerPostlist(t *testing.T) {
 }
 
 func TestValidateMoveOrCopy(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3727,6 +3832,9 @@ func TestValidateMoveOrCopy(t *testing.T) {
 }
 
 func TestPermanentDeletePost(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -3818,6 +3926,9 @@ func TestPermanentDeletePost(t *testing.T) {
 }
 
 func TestSendTestMessage(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	t.Run("Should create the post with the correct prop", func(t *testing.T) {
@@ -3828,6 +3939,9 @@ func TestSendTestMessage(t *testing.T) {
 }
 
 func TestPopulateEditHistoryFileMetadata(t *testing.T) {
+	if mainHelper.Options.RunParallel {
+		t.Parallel()
+	}
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
