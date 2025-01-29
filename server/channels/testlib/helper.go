@@ -131,7 +131,7 @@ func (h *MainHelper) Main(m *testing.M) {
 	h.status = m.Run()
 }
 
-func (h *MainHelper) GetNewStore(tb testing.TB, withReadReplica bool) (store.Store, *model.SqlSettings, *searchengine.Broker) {
+func (h *MainHelper) GetNewStores(tb testing.TB, withReadReplica bool) (store.Store, *sqlstore.SqlStore, *model.SqlSettings, *searchengine.Broker) {
 	driverName := os.Getenv("MM_SQLSETTINGS_DRIVERNAME")
 	if driverName == "" {
 		driverName = model.DatabaseDriverPostgres
@@ -163,7 +163,7 @@ func (h *MainHelper) GetNewStore(tb testing.TB, withReadReplica bool) (store.Sto
 
 	preloadMigrations(driverName, sqlStore)
 
-	return store, settings, searchEngine
+	return store, sqlStore, settings, searchEngine
 }
 
 func (h *MainHelper) setupStore(withReadReplica bool) {

@@ -243,7 +243,7 @@ func setupStores(tb testing.TB) (store.Store, *model.SqlSettings, *searchengine.
 	var dbSettings *model.SqlSettings
 	var searchEngine *searchengine.Broker
 	if mainHelper.Options.RunParallel {
-		dbStore, dbSettings, searchEngine = mainHelper.GetNewStore(tb, false)
+		dbStore, _, dbSettings, searchEngine = mainHelper.GetNewStores(tb, false)
 		tb.Cleanup(func() {
 			dbStore.Close()
 		})
