@@ -27,7 +27,6 @@ import (
 	"github.com/mattermost/mattermost/server/public/plugin/plugintest/mock"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
 	"github.com/mattermost/mattermost/server/public/shared/request"
-	"github.com/mattermost/mattermost/server/v8"
 	"github.com/mattermost/mattermost/server/v8/channels/db"
 	"github.com/mattermost/mattermost/server/v8/channels/store"
 	"github.com/mattermost/mattermost/server/v8/channels/store/searchtest"
@@ -161,31 +160,6 @@ func StoreTestWithSqlStore(t *testing.T, f func(*testing.T, request.CTX, store.S
 	}
 }
 
-func preloadSchema(driverName string, sqlStore *SqlStore) {
-	var buf []byte
-	var err error
-
-	switch driverName {
-	case model.DatabaseDriverPostgres:
-		finalPath := filepath.Join(server.GetPackagePath(), "channels", "testlib", "testdata", "psql_schema.sql")
-		buf, err = os.ReadFile(finalPath)
-		if err != nil {
-			panic(fmt.Errorf("cannot read file: %v", err))
-		}
-	case model.DatabaseDriverMysql:
-		finalPath := filepath.Join(server.GetPackagePath(), "channels", "testlib", "testdata", "mysql_schema.sql")
-		buf, err = os.ReadFile(finalPath)
-		if err != nil {
-			panic(fmt.Errorf("cannot read file: %v", err))
-		}
-	}
-	handle := sqlStore.GetMaster()
-	_, err = handle.Exec(string(buf))
-	if err != nil {
-		panic(errors.Wrap(err, "Error preloading schema. Check if you have &multiStatements=true in your DSN if you are using MySQL. Or perhaps the schema changed? If yes, then update the warmup files accordingly"))
-	}
-}
-
 func initStores(logger mlog.LoggerIFace) []*storeType {
 	if testing.Short() {
 		return nil
@@ -221,12 +195,10 @@ func initStores(logger mlog.LoggerIFace) []*storeType {
 		st := st
 		eg.Go(func() error {
 			var err error
-			st.SqlStore, err = New(*st.SqlSettings, logger, nil, SkipMigrations())
+			st.SqlStore, err = New(*st.SqlSettings, logger, nil)
 			if err != nil {
 				return err
 			}
-
-			preloadSchema(*st.SqlSettings.DriverName, st.SqlStore)
 
 			st.Store = st.SqlStore
 			if !enableFullyParallelTests {
@@ -285,9 +257,8 @@ func TestStoreLicenseRace(t *testing.T) {
 		t.Skip(err)
 	}
 
-	store, err := New(*settings, logger, nil, SkipMigrations())
+	store, err := New(*settings, logger, nil)
 	require.NoError(t, err)
-	preloadSchema(*settings.DriverName, store)
 	defer func() {
 		store.Close()
 		storetest.CleanupSqlSettings(settings)
@@ -389,9 +360,8 @@ func TestGetReplica(t *testing.T) {
 
 			settings.DataSourceReplicas = dataSourceReplicas
 			settings.DataSourceSearchReplicas = dataSourceSearchReplicas
-			store, err := New(*settings, logger, nil, SkipMigrations())
+			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
-			preloadSchema(*settings.DriverName, store)
 			defer func() {
 				store.Close()
 				storetest.CleanupSqlSettings(settings)
@@ -463,9 +433,8 @@ func TestGetReplica(t *testing.T) {
 
 			settings.DataSourceReplicas = dataSourceReplicas
 			settings.DataSourceSearchReplicas = dataSourceSearchReplicas
-			store, err := New(*settings, logger, nil, SkipMigrations())
+			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
-			preloadSchema(*settings.DriverName, store)
 			defer func() {
 				store.Close()
 				storetest.CleanupSqlSettings(settings)
@@ -518,6 +487,10 @@ func TestGetReplica(t *testing.T) {
 }
 
 func TestGetDbVersion(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	logger := mlog.CreateTestLogger(t)
 
 	testDrivers := []string{
@@ -534,9 +507,8 @@ func TestGetDbVersion(t *testing.T) {
 				t.Skip(err)
 			}
 
-			store, err := New(*settings, logger, nil, SkipMigrations())
+			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
-			preloadSchema(*settings.DriverName, store)
 
 			t.Cleanup(func() {
 				store.Close()
@@ -551,6 +523,10 @@ func TestGetDbVersion(t *testing.T) {
 }
 
 func TestEnsureMinimumDBVersion(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	tests := []struct {
 		driver string
 		ver    string
@@ -632,6 +608,10 @@ func TestEnsureMinimumDBVersion(t *testing.T) {
 }
 
 func TestIsBinaryParamEnabled(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	tests := []struct {
 		store    SqlStore
 		expected bool
@@ -766,9 +746,8 @@ func TestGetAllConns(t *testing.T) {
 
 			settings.DataSourceReplicas = dataSourceReplicas
 			settings.DataSourceSearchReplicas = dataSourceSearchReplicas
-			store, err := New(*settings, logger, nil, SkipMigrations())
+			store, err := New(*settings, logger, nil)
 			require.NoError(t, err)
-			preloadSchema(*settings.DriverName, store)
 			defer func() {
 				store.Close()
 				storetest.CleanupSqlSettings(settings)
@@ -780,6 +759,10 @@ func TestGetAllConns(t *testing.T) {
 }
 
 func TestIsDuplicate(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	testErrors := map[error]bool{
 		&pq.Error{Code: "42P06"}:                          false,
 		&pq.Error{Code: PGDupTableErrorCode}:              true,
@@ -799,6 +782,10 @@ func TestIsDuplicate(t *testing.T) {
 }
 
 func TestVersionString(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	versions := []struct {
 		input  int
 		driver string
@@ -838,6 +825,10 @@ func TestVersionString(t *testing.T) {
 }
 
 func TestReplicaLagQuery(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	testDrivers := []string{
 		model.DatabaseDriverPostgres,
 		model.DatabaseDriverMysql,
@@ -978,6 +969,10 @@ func TestMySQLReadTimeout(t *testing.T) {
 }
 
 func TestGetDBSchemaVersion(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	testDrivers := []string{
 		model.DatabaseDriverPostgres,
 		model.DatabaseDriverMysql,
@@ -1023,6 +1018,10 @@ func TestGetDBSchemaVersion(t *testing.T) {
 }
 
 func TestGetLocalSchemaVersion(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	testDrivers := []string{
 		model.DatabaseDriverPostgres,
 		model.DatabaseDriverMysql,
@@ -1057,6 +1056,10 @@ func TestGetLocalSchemaVersion(t *testing.T) {
 }
 
 func TestGetAppliedMigrations(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	testDrivers := []string{
 		model.DatabaseDriverPostgres,
 		model.DatabaseDriverMysql,
@@ -1110,6 +1113,10 @@ func TestGetAppliedMigrations(t *testing.T) {
 }
 
 func TestSkipMigrationsOption(t *testing.T) {
+	if enableFullyParallelTests {
+		t.Parallel()
+	}
+
 	testDrivers := []string{
 		model.DatabaseDriverPostgres,
 		model.DatabaseDriverMysql,
