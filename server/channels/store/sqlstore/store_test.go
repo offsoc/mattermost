@@ -53,10 +53,20 @@ func newStoreType(name, driver string) *storeType {
 
 func StoreTest(t *testing.T, f func(*testing.T, request.CTX, store.Store)) {
 	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
 
 	defer func() {
 		if err := recover(); err != nil {
 			tearDownGlobalStores()
+			if enableFullyParallelTests {
+				tearDownStores(stores)
+			}
 			panic(err)
 		}
 	}()
@@ -80,10 +90,20 @@ func StoreTest(t *testing.T, f func(*testing.T, request.CTX, store.Store)) {
 
 func StoreTestWithSearchTestEngine(t *testing.T, f func(*testing.T, store.Store, *searchtest.SearchTestEngine)) {
 	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
 
 	defer func() {
 		if err := recover(); err != nil {
 			tearDownGlobalStores()
+			if enableFullyParallelTests {
+				tearDownStores(stores)
+			}
 			panic(err)
 		}
 	}()
@@ -106,10 +126,20 @@ func StoreTestWithSearchTestEngine(t *testing.T, f func(*testing.T, store.Store,
 
 func StoreTestWithSqlStore(t *testing.T, f func(*testing.T, request.CTX, store.Store, storetest.SqlStore)) {
 	stores := storeTypes
+	if enableFullyParallelTests {
+		t.Parallel()
+		stores = initStores(mlog.CreateConsoleLogger())
+		t.Cleanup(func() {
+			tearDownStores(stores)
+		})
+	}
 
 	defer func() {
 		if err := recover(); err != nil {
 			tearDownGlobalStores()
+			if enableFullyParallelTests {
+				tearDownStores(stores)
+			}
 			panic(err)
 		}
 	}()
