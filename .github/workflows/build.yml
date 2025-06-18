@@ -9,17 +9,17 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest # Define the runner OS here, outside the matrix include
     strategy:
       matrix:
-        os: ubuntu-latest
+        # Define the permutations for platform and arch directly in the matrix
+        # Or if you need different OS's, 'os' would go here as a variable.
+        # Since 'runs-on' is fixed to ubuntu-latest, we only need platform/arch variations.
         include:
-          - os: ubuntu-latest
-            platform: linux
+          - platform: linux
             arch: amd64
             artifact_name: mattermost-linux-amd64
-          - os: ubuntu-latest
-            platform: linux
+          - platform: linux
             arch: arm64
             artifact_name: mattermost-linux-arm64
 
