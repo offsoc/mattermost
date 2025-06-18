@@ -1,4 +1,4 @@
-name: Build Mattermost
+name: Build and Release Mattermost
 
 on:
   push:
@@ -67,4 +67,33 @@ jobs:
         path: |
           server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mattermost
           server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mmctl
-        if-no-files-found: error 
+        if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        tag_name: v${{ github.run_number }}
+        draft: false
+        prerelease: false
+        files: |
+          artifacts/mattermost-linux-amd64/mattermost
+          artifacts/mattermost-linux-amd64/mmctl
+          artifacts/mattermost-linux-arm64/mattermost
+          artifacts/mattermost-linux-arm64/mmctl
+          artifacts/mattermost-darwin-amd64/mattermost
+          artifacts/mattermost-darwin-amd64/mmctl
+          artifacts/mattermost-darwin-arm64/mattermost
+          artifacts/mattermost-darwin-arm64/mmctl
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
