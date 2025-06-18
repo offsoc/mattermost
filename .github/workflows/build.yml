@@ -38,11 +38,6 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Install dependencies
-      run: |
-        cd server
-        make dependencies
-
     - name: Build Mattermost
       env:
         BUILD_ENTERPRISE: true
