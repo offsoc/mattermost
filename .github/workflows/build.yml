@@ -79,4 +79,4 @@ jobs:
           artifacts/mattermost-linux-arm64/mattermost
           artifacts/mattermost-linux-arm64/mmctl
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITOKEN }}
