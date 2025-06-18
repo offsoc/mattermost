@@ -19,9 +19,10 @@ jobs:
           - platform: linux
             arch: amd64
             artifact_name: mattermost-linux-amd64
-          - platform: linux
-            arch: arm64
-            artifact_name: mattermost-linux-arm64
+          # If you ever want arm64 back, uncomment this:
+          # - platform: linux
+          #   arch: arm64
+          #   artifact_name: mattermost-linux-arm64
 
     steps:
     - uses: actions/checkout@v3
@@ -38,14 +39,20 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Build Mattermost
+    - name: Install dependencies
+      run: |
+        cd server
+        make dependencies
+
+    - name: Build Mattermost and mmctl # Changed name to reflect both builds
       env:
         BUILD_ENTERPRISE: true
         GOOS: ${{ matrix.platform }}
         GOARCH: ${{ matrix.arch }}
       run: |
         cd server
-        make build
+        make build # Builds the main Mattermost server
+        make mmctl-build # Explicitly builds mmctl
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -76,7 +83,8 @@ jobs:
         files: |
           artifacts/mattermost-linux-amd64/mattermost
           artifacts/mattermost-linux-amd64/mmctl
-          artifacts/mattermost-linux-arm64/mattermost
-          artifacts/mattermost-linux-arm64/mmctl
       env:
+        # Reminder: If GITOKEN is not configured in your repo secrets, 
+        # or doesn't have 'repo' scope, this step will fail.
+        # secrets.GITHUB_TOKEN is the default token with auto-configured permissions.
         GITHUB_TOKEN: ${{ secrets.GITOKEN }}
