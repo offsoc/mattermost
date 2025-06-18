@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: ubuntu-latest
         include:
           - os: ubuntu-latest
             platform: linux
@@ -22,14 +22,6 @@ jobs:
             platform: linux
             arch: arm64
             artifact_name: mattermost-linux-arm64
-          - os: macos-latest
-            platform: darwin
-            arch: amd64
-            artifact_name: mattermost-darwin-amd64
-          - os: macos-latest
-            platform: darwin
-            arch: arm64
-            artifact_name: mattermost-darwin-arm64
 
     steps:
     - uses: actions/checkout@v3
@@ -39,12 +31,12 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.21'
+        go-version: '1.23.7'
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '22'
 
     - name: Install dependencies
       run: |
@@ -91,9 +83,5 @@ jobs:
           artifacts/mattermost-linux-amd64/mmctl
           artifacts/mattermost-linux-arm64/mattermost
           artifacts/mattermost-linux-arm64/mmctl
-          artifacts/mattermost-darwin-amd64/mattermost
-          artifacts/mattermost-darwin-amd64/mmctl
-          artifacts/mattermost-darwin-arm64/mattermost
-          artifacts/mattermost-darwin-arm64/mmctl
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
