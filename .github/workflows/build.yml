@@ -9,62 +9,79 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # Define the runner OS here, outside the matrix include
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Define the permutations for platform and arch directly in the matrix
-        # Or if you need different OS's, 'os' would go here as a variable.
-        # Since 'runs-on' is fixed to ubuntu-latest, we only need platform/arch variations.
         include:
           - platform: linux
             arch: amd64
             artifact_name: mattermost-linux-amd64
-          # If you ever want arm64 back, uncomment this:
+          # If you want arm64, you'd add another entry here:
           # - platform: linux
           #   arch: arm64
           #   artifact_name: mattermost-linux-arm64
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v4
       with:
-        go-version: '1.23.7'
+        go-version: '1.23.7' # Or '22' if you prefer a major version
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
-        node-version: '22'
+        node-version: '22' # Ensure this matches the Mattermost webapp requirements
 
-    - name: Build Mattermost Server # 明确编译 Mattermost 服务器
+    - name: Install server dependencies (Go modules)
+      run: |
+        cd server
+        make dependencies # This runs 'go mod tidy' and potentially other dependency steps
+
+    - name: Install webapp dependencies (Node modules)
+      run: |
+        cd server/webapp # Navigate to the webapp directory within the server repo
+        # Remove old node_modules and lock file for a clean install
+        rm -rf node_modules package-lock.json
+        # Install with --legacy-peer-deps to resolve common React/npm conflicts
+        npm install --legacy-peer-deps
+
+    - name: Build Mattermost Server
       env:
         BUILD_ENTERPRISE: true
         GOOS: ${{ matrix.platform }}
         GOARCH: ${{ matrix.arch }}
       run: |
         cd server
-        make build # 编译主要的 Mattermost 服务器
+        make build # Builds the main Mattermost server for the specified GOOS/GOARCH
 
-    - name: Build mmctl # 明确编译 mmctl 工具
+    - name: Build mmctl
       env:
-        BUILD_ENTERPRISE: true # 保持与服务器相同的企业版构建环境，尽管 mmctl 可能不需要
+        BUILD_ENTERPRISE: true
         GOOS: ${{ matrix.platform }}
         GOARCH: ${{ matrix.arch }}
       run: |
         cd server
-        make mmctl-build # 编译 mmctl 工具
+        make mmctl-build # Builds the mmctl tool for the specified GOOS/GOARCH
 
-    - name: Upload build artifacts
+    - name: Debug: List compiled binaries and check paths
+      run: |
+        echo "Listing contents of server/bin/:"
+        ls -lR server/bin/
+        echo "Expected mattermost path: server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mattermost"
+        echo "Expected mmctl path: server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mmctl"
+
+    - name: Upload compiled artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
         path: |
           server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mattermost
           server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mmctl
-        if-no-files-found: error
+        if-no-files-found: error # Ensure failure if files aren't found
 
   release:
     needs: build
@@ -73,21 +90,20 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
-        path: artifacts
+        path: artifacts # Download artifacts into an 'artifacts' directory
 
     - name: Create Release
       id: create_release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v1
       with:
-        name: Release ${{ github.ref_name }}
-        tag_name: v${{ github.run_number }}
-        draft: false
-        prerelease: false
+        name: Release ${{ github.ref_name }} # Release name based on branch/tag name
+        tag_name: v${{ github.run_number }} # Generate a tag name using the run number
+        draft: false # Publish immediately, set to 'true' for a draft release
+        prerelease: false # Set to 'true' for a pre-release
         files: |
-          artifacts/mattermost-linux-amd64/mattermost
-          artifacts/mattermost-linux-amd64/mmctl
+          artifacts/mattermost-linux-amd64/mattermost # Path to the downloaded server binary
+          artifacts/mattermost-linux-amd64/mmctl      # Path to the downloaded mmctl binary
       env:
-        # Reminder: If GITOKEN is not configured in your repo secrets, 
-        # or doesn't have 'repo' scope, this step will fail.
-        # secrets.GITHUB_TOKEN is the default token with auto-configured permissions.
+        # GITHUB_TOKEN is a GitHub-provided token with appropriate permissions for releases.
+        # Ensure 'GITOKEN' secret is correctly configured in your repository settings.
         GITHUB_TOKEN: ${{ secrets.GITOKEN }}
