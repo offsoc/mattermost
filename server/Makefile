@@ -402,7 +402,7 @@ ifneq ($(IGNORE_GO_WORK_IF_EXISTS),true)
 	$(GO) work use .
 	$(GO) work use ./public
 ifeq ($(BUILD_ENTERPRISE_READY),true)
-	$(GO) work use $(BUILD_ENTERPRISE_DIR)
+	$(GO) work use ../../enterprise
 endif
 endif
 
