@@ -52,9 +52,9 @@
     "strip-ansi": "7.1.0",
     "style-loader": "4.0.0",
     "typescript-eslint-language-service": "5.0.5",
-    "webpack": "5.95.0",
+    "webpack": "5.99.9",
     "webpack-cli": "5.1.4",
-    "webpack-dev-server": "5.1.0"
+    "webpack-dev-server": "5.2.1"
   },
   "overrides": {
     "@floating-ui/react": {
