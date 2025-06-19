@@ -80,16 +80,17 @@ jobs:
         # Run the 'mmctl-build' target in the server's Makefile.
         # This explicitly compiles the command-line tool.
         make mmctl-build
-
     - name: Debug: List compiled binaries and verify paths
-      # This step helps confirm where the binaries are actually placed after compilation.
-      # Check the logs for this step if you still face 'No files were found' errors.
+      env:
+        PLATFORM: ${{ matrix.platform }}
+        ARCH: ${{ matrix.arch }}
       run: |
         echo "Listing contents of server/bin/ directory:"
         ls -lR server/bin/
         echo "---"
-        echo "Expected Mattermost binary path: server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mattermost"
-        echo "Expected mmctl binary path: server/bin/${{ matrix.platform }}_${{ matrix.arch }}/mmctl"
+        echo "Expected Mattermost binary path: server/bin/${PLATFORM}_${ARCH}/mattermost"
+        echo "Expected mmctl binary path: server/bin/${PLATFORM}_${ARCH}/mmctl"
+
 
     - name: Upload compiled artifacts
       uses: actions/upload-artifact@v4
