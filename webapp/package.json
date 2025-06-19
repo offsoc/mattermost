@@ -54,7 +54,7 @@
     "typescript-eslint-language-service": "5.0.5",
     "webpack": "5.99.9",
     "webpack-cli": "5.1.4",
-    "webpack-dev-server": "5.2.1"
+    "webpack-dev-server": "5.2.2"
   },
   "overrides": {
     "@floating-ui/react": {
