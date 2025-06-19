@@ -39,15 +39,23 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Build Mattermost and mmctl # Changed name to reflect both builds
+    - name: Build Mattermost Server # 明确编译 Mattermost 服务器
       env:
         BUILD_ENTERPRISE: true
         GOOS: ${{ matrix.platform }}
         GOARCH: ${{ matrix.arch }}
       run: |
         cd server
-        make build # Builds the main Mattermost server
-        make mmctl-build # Explicitly builds mmctl
+        make build # 编译主要的 Mattermost 服务器
+
+    - name: Build mmctl # 明确编译 mmctl 工具
+      env:
+        BUILD_ENTERPRISE: true # 保持与服务器相同的企业版构建环境，尽管 mmctl 可能不需要
+        GOOS: ${{ matrix.platform }}
+        GOARCH: ${{ matrix.arch }}
+      run: |
+        cd server
+        make mmctl-build # 编译 mmctl 工具
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
