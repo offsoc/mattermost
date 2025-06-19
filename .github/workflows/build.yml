@@ -80,7 +80,7 @@ jobs:
         # Run the 'mmctl-build' target in the server's Makefile.
         # This explicitly compiles the command-line tool.
         make mmctl-build
-    - name: Debug: List compiled binaries and verify paths
+    - name: Debug 
       env:
         PLATFORM: ${{ matrix.platform }}
         ARCH: ${{ matrix.arch }}
