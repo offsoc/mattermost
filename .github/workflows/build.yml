@@ -39,11 +39,6 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Install dependencies
-      run: |
-        cd server
-        make dependencies
-
     - name: Build Mattermost and mmctl # Changed name to reflect both builds
       env:
         BUILD_ENTERPRISE: true
