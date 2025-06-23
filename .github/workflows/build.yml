@@ -24,19 +24,19 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Fetch all history for proper versioning/hashing
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         # Using a fixed Go version for consistency. '1.23.7' was from your prompt.
         # Consider '1.22.x' or '1.23.x' for current stable versions if 1.23.7 specifically causes issues.
         go-version: '1.23.7' 
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         # Using Node.js 22 as it meets Mattermost's requirements and was in your workflow
         node-version: '22'
@@ -113,7 +113,7 @@ jobs:
 
     - name: Create GitHub Release
       id: create_release # Assign an ID to this step to reference its outputs
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         # Define the name and tag for your GitHub release
         name: Release ${{ github.ref_name }} # e.g., Release main, or Release v1.2.3
