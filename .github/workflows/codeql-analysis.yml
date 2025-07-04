@@ -29,18 +29,18 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/init@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
         with:
           languages: ${{ matrix.language }}
           debug: false
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Build JavaScript
-        uses: github/codeql-action/autobuild@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/autobuild@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
         if: ${{ matrix.language  == 'javascript' }}
 
       - name: Setup go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.5.0
         with:
           go-version-file: server/go.mod
         if: ${{ matrix.language == 'go' }}
@@ -54,4 +54,4 @@ jobs:
 
       # Perform Analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/analyze@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
