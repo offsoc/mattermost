@@ -29,7 +29,7 @@ jobs:
         fetch-depth: 0 # Fetch all history for proper versioning/hashing
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v5.5.0
       with:
         # Using a fixed Go version for consistency. '1.23.7' was from your prompt.
         # Consider '1.22.x' or '1.23.x' for current stable versions if 1.23.7 specifically causes issues.

@@ -38,7 +38,7 @@ jobs:
         working-directory: ./server
         run: echo GO_VERSION=$(cat .go-version) >> "${GITHUB_OUTPUT}"
       - name: Setup Go
-        uses: actions/setup-go@19bb51245e9c80abacb2e91cc42b33fa478b8639 # v4.2.1
+        uses: actions/setup-go@fa96338abe5531f6e34c5cc0bbe28c1a533d5505 # v4.2.1
         with:
           go-version: ${{ steps.go.outputs.GO_VERSION }}
           cache-dependency-path: server/go.sum
